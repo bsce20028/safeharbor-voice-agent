@@ -337,3 +337,17 @@ def retell_setup(llm_id: str = "", agent_id: str = ""):
     """One-time setup (or update) of the Retell LLM and agent. Needs ?key=TOOL_API_KEY."""
     base_url = os.environ.get("PUBLIC_BASE_URL", "https://safeharbor-voice-agent.vercel.app")
     return retell.setup(base_url, TOOL_API_KEY, llm_id or retell.LLM_ID, agent_id or retell.AGENT_ID)
+
+
+@app.get("/api/admin/retell-debug", dependencies=[Depends(require_api_key)])
+def retell_debug():
+    """Tries to create a web call server-side and reports exactly what Retell says."""
+    status, body = retell.call_api("POST", "/v3/create-web-call", {"agent_id": retell.AGENT_ID})
+    if isinstance(body, dict) and "access_token" in body:
+        body = {**body, "access_token": body["access_token"][:12] + "..."}
+    agent_status, agent = retell.call_api("GET", f"/get-agent/{retell.AGENT_ID}")
+    return {
+        "create_web_call": {"status": status, "body": body},
+        "agent": {"status": agent_status, "voice_id": agent.get("voice_id"), "is_published": agent.get("is_published"),
+                  "version": agent.get("version"), "error": agent.get("error") or agent.get("message")},
+    }

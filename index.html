@@ -168,6 +168,8 @@
   .btn-end:hover { background: #b91c1c; }
   .btn-light { background: var(--bg-2); color: var(--ink); border: 1px solid var(--line); padding: 12px 18px; }
   .btn-light[aria-pressed="true"] { background: var(--amber-soft); border-color: #fde68a; }
+  .p-err { margin-top: 10px; font: 11px/1.4 "JetBrains Mono", monospace; color: var(--ink-3); word-break: break-word; }
+  .p-err:empty { display: none; }
   .p-hint { margin-top: 14px; font-size: 12px; color: var(--ink-3); }
   @media (max-width: 560px) {
     .dock { right: 12px; left: 12px; bottom: 12px; display: flex; justify-content: flex-end; }
@@ -387,6 +389,7 @@
       <button class="btn btn-light" id="p-mute" type="button" aria-pressed="false" hidden>Mute</button>
       <button class="btn btn-end" id="p-end" type="button" hidden>End call</button>
     </div>
+    <div class="p-err" id="p-err"></div>
     <div class="p-hint">Try SH-1001 · born April 12, 1988</div>
   </div>
 </div>
@@ -413,6 +416,7 @@
   const startBtn = document.getElementById("p-start");
   const muteBtn = document.getElementById("p-mute");
   const endBtn = document.getElementById("p-end");
+  const lastError = document.getElementById("p-err");
   let call = null, timer = null, startedAt = 0, muted = false;
 
   function setState(state, text, isError = false) {
@@ -439,6 +443,7 @@
   async function startCall() {
     if (call && dock.dataset.state !== "ended" && dock.dataset.state !== "error" && dock.dataset.state !== "idle") return;
     muted = false; muteBtn.setAttribute("aria-pressed", "false"); muteBtn.textContent = "Mute";
+    lastError.textContent = "";
     setState("connecting", "Connecting…");
     let c;
     try { c = await getClient(); } catch (e) { console.error(e); setState("error", "Couldn't load the call. Check your connection and try again.", true); return; }
@@ -456,7 +461,7 @@
           }
         },
         onEnd: () => { stopTimer(); if (dock.dataset.state !== "error") setState("ended", "Call ended. Thanks for trying SafeHarbor!"); setTimeout(window.loadActivity, 1500); },
-        onError: (err) => { stopTimer(); console.error(err); setState("error", friendly(err), true); },
+        onError: (err) => { stopTimer(); console.error("Retell call error:", err); setState("error", friendly(err), true); lastError.textContent = String(err && (err.message || err)).slice(0, 160); },
       },
     });
   }
