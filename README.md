@@ -7,18 +7,17 @@ An AI voice agent for a fictional US insurance agency. Callers talk to it from a
 
 **Live demo:** https://safeharbor-voice-agent.vercel.app
 
-**Stack:** ElevenLabs Agents (voice) · FastAPI (business logic) · plain HTML landing page · Vercel (free hosting) · JSON data (no database yet).
+**Stack:** Retell AI (voice) · FastAPI (business logic) · plain HTML landing page · Vercel (free hosting) · JSON data (no database yet).
 
 ## How a call works
 
-1. The visitor clicks **Talk to SafeHarbor**; the ElevenLabs widget connects.
-2. ElevenLabs handles speech-to-text, the AI reply and text-to-speech live.
+1. The visitor clicks **Talk to SafeHarbor**. The page asks the backend to start a Retell web call (`/api/retell/v3/create-web-call`), so the secret key stays on the server.
+2. Retell handles speech-to-text, the AI reply and text-to-speech live over WebRTC.
 3. When the agent needs data, it calls a FastAPI tool endpoint:
    - `get_quotes` → 3 carriers in parallel (3s timeout each, a failing carrier is skipped)
    - `select_quote` → saves the choice, returns a quote reference
    - `verify_policy` → checks policy number + date of birth
    - `file_claim` → saves the claim, returns a claim number and priority
-4. After the call, ElevenLabs posts the transcript summary to `/api/webhooks/elevenlabs`.
 5. The landing page's **Live activity** panel shows recent quotes and claims.
 
 ## Project layout
@@ -68,7 +67,19 @@ curl -X POST localhost:8000/api/tools/get-quotes \
 
 ---
 
-# ElevenLabs setup
+# Retell setup (automatic)
+
+1. On Vercel, add the env var `RETELL_API_KEY` (secret key from the Retell dashboard) and redeploy.
+2. Open `https://YOUR-PROJECT.vercel.app/api/admin/retell-setup?key=YOUR_TOOL_API_KEY`. It creates the Retell LLM (prompt + 4 tools + end call) and the agent, and returns their IDs.
+3. Add `RETELL_AGENT_ID` and `RETELL_LLM_ID` on Vercel with those IDs and redeploy. `/api/health` should show `"voice_configured": true`.
+4. To change the prompt or tools later, edit `api/retell.py`, deploy, and open the setup URL again: it updates the same agent.
+
+Calls are limited to 2 minutes and 4 calls per device per 10 minutes, to protect the free credit.
+
+---
+
+# Alternative: ElevenLabs setup (manual)
+
 
 Do these after the backend is deployed, so you have your Vercel URL. Below, `https://YOUR-PROJECT.vercel.app` means your real URL. Menu names may differ slightly in the dashboard.
 
