@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SafeHarbor Insurance — AI Voice Receptionist</title>
+<meta name="description" content="An AI voice receptionist that quotes car insurance across three carriers and files accident claims, 24/7.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0b1726; --ink-2: #475569; --ink-3: #94a3b8;
+    --line: #e2e8f0; --bg: #ffffff; --bg-2: #f8fafc;
+    --navy: #0a1f33; --navy-2: #102b45;
+    --brand: #14b8a6; --brand-d: #0d9488; --brand-soft: #ccfbf1;
+    --amber: #f59e0b; --amber-soft: #fef3c7; --red-soft: #fee2e2; --red: #b91c1c;
+    --radius: 16px; --gutter: clamp(16px, 4vw, 72px);
+    --shadow: 0 1px 2px rgba(15,23,42,.04), 0 12px 32px -12px rgba(15,23,42,.12);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; font-family: Inter, system-ui, -apple-system, sans-serif; color: var(--ink); background: var(--bg); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+  .container { width: 100%; padding-inline: var(--gutter); }
+  .mono { font-family: "JetBrains Mono", ui-monospace, monospace; }
+
+  /* ---------- Nav ---------- */
+  .nav { position: sticky; top: 0; z-index: 50; background: rgba(10,31,51,.85); backdrop-filter: saturate(160%) blur(12px); border-bottom: 1px solid rgba(255,255,255,.08); }
+  .nav .container { display: flex; align-items: center; justify-content: space-between; height: 68px; gap: 16px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; color: #fff; letter-spacing: -.01em; }
+  .nav-links { display: flex; align-items: center; gap: 32px; font-size: 14px; color: #cbd5e1; }
+  .nav-links a:hover { color: #fff; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; border: 0; border-radius: 12px; font: 600 15px Inter, sans-serif; cursor: pointer; transition: transform .15s ease, background .15s ease, box-shadow .15s ease; white-space: nowrap; }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary { background: var(--brand); color: #04211d; padding: 14px 22px; box-shadow: 0 8px 24px -8px rgba(20,184,166,.6); }
+  .btn-primary:hover { background: #2dd4bf; }
+  .btn-ghost { background: rgba(255,255,255,.08); color: #fff; padding: 14px 22px; border: 1px solid rgba(255,255,255,.16); }
+  .btn-ghost:hover { background: rgba(255,255,255,.14); }
+  .btn-sm { padding: 10px 16px; font-size: 14px; border-radius: 10px; }
+
+  /* ---------- Hero ---------- */
+  .hero { position: relative; overflow: hidden; color: #fff; background:
+      radial-gradient(1200px 600px at 85% -10%, rgba(20,184,166,.28), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(59,130,246,.22), transparent 60%),
+      linear-gradient(180deg, var(--navy) 0%, var(--navy-2) 100%); }
+  .hero::after { content: ""; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px); background-size: 48px 48px; mask-image: linear-gradient(180deg, #000 30%, transparent 90%); pointer-events: none; }
+  .hero .container { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: clamp(32px, 5vw, 96px); align-items: center; padding-block: clamp(56px, 8vw, 120px); }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #99f6e4; background: rgba(20,184,166,.12); border: 1px solid rgba(20,184,166,.3); padding: 6px 12px; border-radius: 999px; }
+  .pulse { width: 8px; height: 8px; border-radius: 50%; background: #2dd4bf; box-shadow: 0 0 0 0 rgba(45,212,191,.7); animation: pulse 2s infinite; }
+  @keyframes pulse { 70% { box-shadow: 0 0 0 10px rgba(45,212,191,0); } 100% { box-shadow: 0 0 0 0 rgba(45,212,191,0); } }
+  h1 { font-size: clamp(36px, 5.2vw, 72px); line-height: 1.04; letter-spacing: -.035em; font-weight: 800; margin: 20px 0; }
+  h1 .grad { background: linear-gradient(90deg, #5eead4, #93c5fd); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lead { font-size: clamp(16px, 1.4vw, 20px); color: #cbd5e1; max-width: 40em; margin: 0 0 32px; }
+  .cta-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .cta-note { margin-top: 16px; font-size: 13px; color: #94a3b8; }
+  .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 48px; max-width: 560px; }
+  .stat b { display: block; font-size: clamp(22px, 2.2vw, 30px); font-weight: 800; letter-spacing: -.02em; color: #fff; }
+  .stat span { font-size: 13px; color: #94a3b8; }
+
+  /* Call card */
+  .call { background: rgba(255,255,255,.96); color: var(--ink); border-radius: 24px; box-shadow: 0 40px 80px -24px rgba(0,0,0,.55); overflow: hidden; }
+  .call-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+  .call-who { display: flex; align-items: center; gap: 12px; }
+  .avatar { width: 40px; height: 40px; border-radius: 50%; background: conic-gradient(from 180deg, #14b8a6, #3b82f6, #14b8a6); display: grid; place-items: center; }
+  .avatar::after { content: ""; width: 14px; height: 14px; border-radius: 50%; background: #fff; }
+  .call-who b { display: block; font-size: 14px; }
+  .call-who span { font-size: 12px; color: var(--brand-d); display: flex; align-items: center; gap: 6px; }
+  .wave { display: flex; gap: 3px; align-items: center; height: 20px; }
+  .wave i { width: 3px; border-radius: 3px; background: var(--brand); animation: wave 1.1s ease-in-out infinite; }
+  .wave i:nth-child(2){animation-delay:.1s}.wave i:nth-child(3){animation-delay:.2s}.wave i:nth-child(4){animation-delay:.3s}.wave i:nth-child(5){animation-delay:.4s}
+  @keyframes wave { 0%,100% { height: 4px; } 50% { height: 18px; } }
+  .call-body { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+  .msg { max-width: 85%; padding: 10px 14px; border-radius: 16px; font-size: 14px; line-height: 1.5; }
+  .msg.ai { background: var(--bg-2); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+  .msg.me { align-self: flex-end; background: var(--navy); color: #fff; border-bottom-right-radius: 4px; }
+  .tool { align-self: flex-start; font-size: 12px; color: #92400e; background: var(--amber-soft); border: 1px solid #fde68a; border-radius: 8px; padding: 6px 10px; }
+  .quotes { display: grid; gap: 8px; margin-top: 2px; }
+  .q { display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; }
+  .q.best { border-color: var(--brand); background: #f0fdfa; }
+  .q b { font-size: 15px; }
+  .tag { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--brand-soft); color: #115e59; margin-left: 8px; }
+
+  /* ---------- Sections ---------- */
+  section { padding-block: clamp(64px, 8vw, 112px); }
+  .alt { background: var(--bg-2); border-block: 1px solid var(--line); }
+  .sec-head { display: flex; align-items: end; justify-content: space-between; gap: 24px; flex-wrap: wrap; margin-bottom: clamp(32px, 4vw, 56px); }
+  .kicker { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--brand-d); margin-bottom: 10px; }
+  h2 { font-size: clamp(28px, 3.2vw, 44px); line-height: 1.1; letter-spacing: -.03em; margin: 0; font-weight: 800; }
+  .sec-head p { color: var(--ink-2); margin: 0; max-width: 520px; font-size: 16px; }
+
+  .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(16px, 2vw, 28px); }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(16px, 2vw, 24px); }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: clamp(22px, 2.4vw, 36px); box-shadow: var(--shadow); }
+  .feature .ico { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; background: var(--brand-soft); color: var(--brand-d); margin-bottom: 20px; }
+  .feature.claim .ico { background: var(--amber-soft); color: #b45309; }
+  .feature h3 { font-size: 22px; margin: 0 0 8px; letter-spacing: -.01em; }
+  .feature p { color: var(--ink-2); margin: 0 0 20px; }
+  .feature ul { list-style: none; padding: 0; margin: 0 0 24px; display: grid; gap: 10px; }
+  .feature li { display: flex; gap: 10px; font-size: 15px; }
+  .feature li::before { content: ""; flex: none; width: 18px; height: 18px; margin-top: 3px; border-radius: 50%; background: var(--brand-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230d9488' stroke-width='3'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E") center/12px no-repeat; }
+  .say { font-size: 14px; background: var(--bg-2); border: 1px dashed var(--line); padding: 12px 14px; border-radius: 10px; color: var(--ink-2); }
+  .say b { color: var(--ink); font-weight: 600; }
+
+  .step { position: relative; }
+  .step .num { font-size: 13px; font-weight: 700; color: var(--brand-d); background: var(--brand-soft); width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; margin-bottom: 16px; }
+  .step h4 { margin: 0 0 6px; font-size: 17px; }
+  .step p { margin: 0; color: var(--ink-2); font-size: 14px; }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; box-shadow: var(--shadow); }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; min-width: 560px; }
+  th, td { text-align: left; padding: 16px 20px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  tr:last-child td { border-bottom: 0; }
+  th { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); background: var(--bg-2); }
+  code { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 13px; background: var(--bg-2); border: 1px solid var(--line); padding: 3px 8px; border-radius: 6px; }
+  .pill { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--brand-soft); color: #115e59; }
+  .pill.off { background: var(--red-soft); color: var(--red); }
+  .pill.high { background: var(--amber-soft); color: #92400e; }
+  .copy { background: none; border: 0; color: var(--ink-3); cursor: pointer; padding: 4px; margin-left: 6px; border-radius: 6px; vertical-align: middle; }
+  .copy:hover { color: var(--brand-d); background: var(--bg-2); }
+
+  /* Activity */
+  .act-card h3 { display: flex; align-items: center; justify-content: space-between; margin: 0 0 16px; font-size: 18px; }
+  .live { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--brand-d); }
+  .act-card table { min-width: 0; font-size: 14px; }
+  .act-card th, .act-card td { padding: 12px 10px; white-space: normal; }
+  .empty { display: grid; place-items: center; text-align: center; gap: 6px; padding: 36px 16px; color: var(--ink-3); font-size: 14px; border: 1px dashed var(--line); border-radius: 12px; }
+  .muted { color: var(--ink-3); font-size: 12px; }
+
+  /* Stack */
+  .stack { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .stack div { background: #fff; padding: 24px; }
+  .stack b { display: block; font-size: 15px; margin-bottom: 4px; }
+  .stack span { font-size: 14px; color: var(--ink-2); }
+
+  /* CTA band + footer */
+  .band { background: linear-gradient(120deg, var(--navy), #0f3a4f); color: #fff; }
+  .band .container { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; padding-block: clamp(48px, 6vw, 80px); }
+  .band h2 { color: #fff; }
+  .band p { color: #cbd5e1; margin: 8px 0 0; }
+  footer { background: var(--navy); color: #94a3b8; font-size: 13px; border-top: 1px solid rgba(255,255,255,.08); }
+  footer .container { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-block: 28px 110px; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 1100px) {
+    .grid-4, .stack { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 900px) {
+    .hero .container { grid-template-columns: 1fr; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .nav-links a:not(.btn) { display: none; }
+  }
+  @media (max-width: 560px) {
+    .grid-4, .stack { grid-template-columns: 1fr; }
+    .stats { gap: 10px; }
+    .cta-row .btn { width: 100%; }
+    .msg { max-width: 92%; }
+    .nav .btn-sm span { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container">
+    <a href="#" class="logo" aria-label="SafeHarbor Insurance home">
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path d="M15 2 L26 6 V14 C26 21 21 26 15 28 C9 26 4 21 4 14 V6 Z" fill="#14b8a6"/><path d="M9 16.5 C12 13.5 18 13.5 21 16.5" stroke="#0a1f33" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>
+      SafeHarbor
+    </a>
+    <div class="nav-links">
+      <a href="#features">What it does</a>
+      <a href="#how">How it works</a>
+      <a href="#policies">Test policies</a>
+      <a href="#activity">Live activity</a>
+      <button class="btn btn-primary btn-sm js-talk" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+        <span>Talk to the agent</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="container">
+    <div>
+      <span class="eyebrow"><span class="pulse"></span>AI receptionist · online 24/7</span>
+      <h1>Car insurance quotes and claims, <span class="grad">just by talking.</span></h1>
+      <p class="lead">SafeHarbor's voice agent compares prices from three carriers while you're on the call, and files accident claims in under two minutes, with no hold music.</p>
+      <div class="cta-row">
+        <button class="btn btn-primary js-talk" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+          Start a voice call
+        </button>
+        <a class="btn btn-ghost" href="#policies">Get a test policy</a>
+      </div>
+      <div class="cta-note">Uses your microphone · calls are capped at 2 minutes · demo with fictional data</div>
+      <div class="stats">
+        <div class="stat"><b>3</b><span>carriers quoted at once</span></div>
+        <div class="stat"><b>&lt;2 min</b><span>to file a claim</span></div>
+        <div class="stat"><b>24/7</b><span>no wait, no hold</span></div>
+      </div>
+    </div>
+
+    <div class="call" aria-label="Example call">
+      <div class="call-head">
+        <div class="call-who">
+          <div class="avatar"></div>
+          <div><b>SafeHarbor Receptionist</b><span>● On call · 00:42</span></div>
+        </div>
+        <div class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+      <div class="call-body">
+        <div class="msg ai">Hi, thanks for calling SafeHarbor. Do you need a quote or to report a claim?</div>
+        <div class="msg me">A quote for my 2020 Honda Civic, full coverage.</div>
+        <div class="tool mono">→ get_quotes · asking 3 carriers…</div>
+        <div class="msg ai">Here's what I found, cheapest first:
+          <div class="quotes">
+            <div class="q best"><span>Summit Mutual<span class="tag">Best price</span></span><b>$77/mo</b></div>
+            <div class="q"><span>Harborline Insurance</span><b>$83/mo</b></div>
+            <div class="q"><span>Liberty Shield</span><b>$92/mo</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section id="features">
+  <div class="container">
+    <div class="sec-head">
+      <div><div class="kicker">What it does</div><h2>Two calls, handled end to end</h2></div>
+      <p>The agent talks naturally, asks one question at a time, and only acts on details you actually give it.</p>
+    </div>
+    <div class="grid-2">
+      <div class="card feature">
+        <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></div>
+        <h3>Get a car insurance quote</h3>
+        <p>Tell it about yourself and your car. It asks every carrier in parallel and reads back prices, cheapest first.</p>
+        <ul>
+          <li>Liberty Shield, Summit Mutual and Harborline quoted at once</li>
+          <li>Skips a carrier that's down or slow</li>
+          <li>Saves your choice and gives you a quote reference</li>
+        </ul>
+        <div class="say">Try: <b>"I'd like a quote for full coverage on a 2019 Toyota Corolla."</b></div>
+      </div>
+      <div class="card feature claim">
+        <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="M12 8v4M12 16h.01"/></svg></div>
+        <h3>Report an accident claim</h3>
+        <p>It checks you're safe, verifies your policy, takes down what happened and gives you a claim number right away.</p>
+        <ul>
+          <li>Safety check first, with a 911 prompt if needed</li>
+          <li>Verifies policy number and date of birth</li>
+          <li>Flags high priority if someone is hurt or the car can't be driven</li>
+        </ul>
+        <div class="say">Try: <b>"I was rear-ended yesterday and need to file a claim."</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="how" class="alt">
+  <div class="container">
+    <div class="sec-head">
+      <div><div class="kicker">How it works</div><h2>From your voice to a result in seconds</h2></div>
+      <p>The voice runs on ElevenLabs. Quoting and claims run on a FastAPI backend the agent calls mid-conversation.</p>
+    </div>
+    <div class="grid-4">
+      <div class="card step"><div class="num">1</div><h4>You speak</h4><p>Your speech is transcribed live and the agent works out whether you want a quote or a claim.</p></div>
+      <div class="card step"><div class="num">2</div><h4>It asks questions</h4><p>One at a time, then reads your details back so you can confirm them.</p></div>
+      <div class="card step"><div class="num">3</div><h4>It calls the API</h4><p>The backend asks three carriers in parallel, or verifies your policy and saves the claim.</p></div>
+      <div class="card step"><div class="num">4</div><h4>You get an answer</h4><p>Prices read aloud, or a claim number, plus clear next steps.</p></div>
+    </div>
+    <div class="stack" style="margin-top: clamp(16px, 2vw, 24px)">
+      <div><b>Voice</b><span>ElevenLabs Agents: speech-to-text, LLM, text-to-speech</span></div>
+      <div><b>Backend</b><span>FastAPI on Vercel serverless functions</span></div>
+      <div><b>Carriers</b><span>3 mock APIs with their own pricing and failures</span></div>
+      <div><b>Security</b><span>API-key-protected tools, signed webhooks</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="policies">
+  <div class="container">
+    <div class="sec-head">
+      <div><div class="kicker">Try a claim</div><h2>Test policies</h2></div>
+      <p>Give the agent one of these policy numbers and its date of birth. SH-1004 is lapsed, to show how the agent handles it.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Policy number</th><th>Policyholder</th><th>Date of birth</th><th>Vehicle</th><th>Carrier</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><code>SH-1001</code><button class="copy" data-copy="SH-1001" aria-label="Copy SH-1001">⧉</button></td><td>John Carter</td><td>April 12, 1988</td><td>2021 Toyota Camry</td><td>Liberty Shield</td><td><span class="pill">Active</span></td></tr>
+          <tr><td><code>SH-1002</code><button class="copy" data-copy="SH-1002" aria-label="Copy SH-1002">⧉</button></td><td>Emily Davis</td><td>September 3, 1995</td><td>2018 Honda Civic</td><td>Summit Mutual</td><td><span class="pill">Active</span></td></tr>
+          <tr><td><code>SH-1003</code><button class="copy" data-copy="SH-1003" aria-label="Copy SH-1003">⧉</button></td><td>Michael Brown</td><td>January 25, 1979</td><td>2023 Tesla Model 3</td><td>Harborline</td><td><span class="pill">Active</span></td></tr>
+          <tr><td><code>SH-1004</code><button class="copy" data-copy="SH-1004" aria-label="Copy SH-1004">⧉</button></td><td>Sarah Wilson</td><td>June 30, 2001</td><td>2016 Ford F-150</td><td>Liberty Shield</td><td><span class="pill off">Lapsed</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="activity" class="alt">
+  <div class="container">
+    <div class="sec-head">
+      <div><div class="kicker">Live activity</div><h2>Recent demo calls</h2></div>
+      <p>Quotes and claims from calls appear here within a few seconds. Names are shortened.</p>
+    </div>
+    <div class="grid-2">
+      <div class="card act-card">
+        <h3>Recent quotes <span class="live"><span class="pulse"></span>Live</span></h3>
+        <div id="quotes"><div class="empty"><b>No quotes yet</b>Start a call and ask for a quote.</div></div>
+      </div>
+      <div class="card act-card">
+        <h3>Recent claims <span class="live"><span class="pulse"></span>Live</span></h3>
+        <div id="claims"><div class="empty"><b>No claims yet</b>Report a claim with SH-1001.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="band">
+  <div class="container">
+    <div>
+      <h2>Hear it for yourself</h2>
+      <p>A two-minute call shows the whole flow, from quote to claim.</p>
+    </div>
+    <button class="btn btn-primary js-talk" type="button">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+      Start a voice call
+    </button>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <span>© 2026 SafeHarbor (fictional) · Built by Nauman Ali</span>
+    <span>ElevenLabs Agents + FastAPI on Vercel · Carriers, policies and quotes are not real.</span>
+  </div>
+</footer>
+
+<elevenlabs-convai agent-id="agent_9501m4nasqs8eqa8ktw02g139wtm"></elevenlabs-convai>
+<script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
+
+<script>
+  fetch('/api/health').catch(() => {});
+
+  // Every "talk" button opens the ElevenLabs widget's call button.
+  function findWidgetButton(root) {
+    if (!root) return null;
+    const btns = root.querySelectorAll('button');
+    for (const b of btns) {
+      const label = (b.getAttribute('aria-label') || b.textContent || '').toLowerCase();
+      if (label.includes('call') || label.includes('start') || label.includes('talk')) return b;
+    }
+    return btns[0] || null;
+  }
+  document.querySelectorAll('.js-talk').forEach(el => el.addEventListener('click', () => {
+    const widget = document.querySelector('elevenlabs-convai');
+    const btn = widget && findWidgetButton(widget.shadowRoot);
+    if (btn) btn.click(); else if (widget) widget.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }));
+
+  document.querySelectorAll('.copy').forEach(b => b.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(b.dataset.copy); b.textContent = '✓'; setTimeout(() => b.textContent = '⧉', 1200); } catch (e) {}
+  }));
+
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const ago = iso => {
+    const m = Math.round((Date.now() - new Date(iso)) / 60000);
+    return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : `${Math.round(m / 60)} h ago`;
+  };
+
+  async function loadActivity() {
+    try {
+      const res = await fetch('/api/activity');
+      if (!res.ok) return;
+      const { quotes, claims } = await res.json();
+      if (quotes.length) {
+        document.getElementById('quotes').innerHTML = '<table><thead><tr><th>Caller</th><th>Car</th><th>Best</th><th>Chosen</th></tr></thead><tbody>' +
+          quotes.map(q => `<tr><td>${esc(q.name)}<div class="muted">${ago(q.created_at)}</div></td><td>${esc(q.car)}</td><td>${q.quotes[0] ? '$' + q.quotes[0].monthly_premium + '/mo' : '—'}</td><td>${q.selected ? esc(q.selected) : '<span class="muted">—</span>'}</td></tr>`).join('') +
+          '</tbody></table>';
+      }
+      if (claims.length) {
+        document.getElementById('claims').innerHTML = '<table><thead><tr><th>Claim</th><th>Policy</th><th>Priority</th></tr></thead><tbody>' +
+          claims.map(c => `<tr><td><code>${esc(c.claim_number)}</code><div class="muted">${ago(c.created_at)}</div></td><td>${esc(c.policy_number)}</td><td><span class="pill ${c.priority === 'high' ? 'high' : ''}">${esc(c.priority)}</span></td></tr>`).join('') +
+          '</tbody></table>';
+      }
+    } catch (e) {}
+  }
+  loadActivity();
+  setInterval(loadActivity, 10000);
+</script>
+</body>
+</html>
