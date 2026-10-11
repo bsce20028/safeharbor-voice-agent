@@ -26,17 +26,19 @@ from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from pydantic import BaseModel, Field  # noqa: E402
 
 import data  # noqa: E402
+import retell  # noqa: E402
 from carriers import get_all_quotes  # noqa: E402
 
 TOOL_API_KEY = os.environ.get("TOOL_API_KEY", "dev-key-change-me")
 WEBHOOK_SECRET = os.environ.get("ELEVENLABS_WEBHOOK_SECRET", "")
 
-app = FastAPI(title="SafeHarbor Voice Agent API", version="1.0.0")
+app = FastAPI(title="SafeHarbor Voice Agent API", version="1.1.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET"], allow_headers=["*"])
 
 
-def require_api_key(x_api_key: str = Header(default="")):
-    if not hmac.compare_digest(x_api_key, TOOL_API_KEY):
+def require_api_key(x_api_key: str = Header(default=""), key: str = ""):
+    """Accepts the key as an `x-api-key` header (tools) or `?key=` query param (admin)."""
+    if not hmac.compare_digest(x_api_key or key, TOOL_API_KEY):
         raise HTTPException(status_code=401, detail="Invalid API key")
 
 
@@ -106,7 +108,7 @@ class ClaimRequest(BaseModel):
 # ---------------------------------------------------------------------------
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "time": now_iso()}
+    return {"status": "ok", "time": now_iso(), "voice_configured": bool(retell.API_KEY and retell.AGENT_ID)}
 
 
 @app.get("/api/activity")
@@ -301,3 +303,37 @@ async def elevenlabs_webhook(request: Request):
 def records():
     """Full data for you (needs the x-api-key header)."""
     return data.snapshot()
+
+
+# ---------------------------------------------------------------------------
+# Retell voice: the browser starts calls through this proxy, so the secret
+# RETELL_API_KEY never reaches the page.
+# ---------------------------------------------------------------------------
+_recent_calls: dict[str, list[float]] = {}
+CALLS_PER_IP = 4  # per 10 minutes, to protect the free credit
+
+
+@app.post("/api/retell/v3/create-web-call")
+async def retell_create_web_call(request: Request):
+    if not retell.API_KEY or not retell.AGENT_ID:
+        raise HTTPException(status_code=503, detail="Voice agent is not configured yet")
+
+    ip = (request.headers.get("x-forwarded-for") or "unknown").split(",")[0].strip()
+    now = time.time()
+    hits = [t for t in _recent_calls.get(ip, []) if now - t < 600]
+    if len(hits) >= CALLS_PER_IP:
+        raise HTTPException(status_code=429, detail="Too many calls from this device. Try again in a few minutes.")
+    _recent_calls[ip] = hits + [now]
+
+    # Ignore whatever agent or overrides the browser sent; always use ours.
+    status, body = retell.call_api("POST", "/v3/create-web-call", {"agent_id": retell.AGENT_ID})
+    if status >= 300:
+        raise HTTPException(status_code=502, detail=f"Retell error {status}: {str(body)[:300]}")
+    return body
+
+
+@app.get("/api/admin/retell-setup", dependencies=[Depends(require_api_key)])
+def retell_setup(llm_id: str = "", agent_id: str = ""):
+    """One-time setup (or update) of the Retell LLM and agent. Needs ?key=TOOL_API_KEY."""
+    base_url = os.environ.get("PUBLIC_BASE_URL", "https://safeharbor-voice-agent.vercel.app")
+    return retell.setup(base_url, TOOL_API_KEY, llm_id or retell.LLM_ID, agent_id or retell.AGENT_ID)
